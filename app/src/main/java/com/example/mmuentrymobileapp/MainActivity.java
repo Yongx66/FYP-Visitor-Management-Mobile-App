@@ -27,7 +27,7 @@ public class MainActivity extends AppCompatActivity {
 
         //admin and admin
 
-        signinbtn.setOnClickListener(new View.OnClickListener() {
+        /**signinbtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 if (username.getText().toString().equals("admin") && password.getText().toString().equals("admin")) {
@@ -36,6 +36,13 @@ public class MainActivity extends AppCompatActivity {
                 }else
                     //incorrect
                     Toast.makeText(MainActivity.this, "Login Failed", Toast.LENGTH_SHORT).show();
+            }
+        });*/
+
+        signinbtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                openVisitorActivity();
             }
         });
 
@@ -49,6 +56,10 @@ public class MainActivity extends AppCompatActivity {
     }
     public void openSignupActivity(){
         Intent intent = new Intent(this, SignupActivity.class);
+        startActivity(intent);
+    }
+    public void openVisitorActivity(){
+        Intent intent = new Intent(this, VisitorActivity.class);
         startActivity(intent);
     }
 }

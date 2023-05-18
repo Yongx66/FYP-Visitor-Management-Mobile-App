@@ -9,6 +9,8 @@
     <com.google.android.material.tabs.TabLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        app:tabTextColor="@color/black"
+        app:tabIndicatorColor="@android:color/holo_blue_light"
         android:id="@+id/tab_layout">
 
         <com.google.android.material.tabs.TabItem

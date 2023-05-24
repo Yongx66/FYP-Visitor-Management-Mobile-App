@@ -33,7 +33,7 @@
         android:id="@+id/username"
         android:layout_below="@+id/header"
         android:background="#30ffffff"
-        android:hint="Username"
+        android:hint="Email"
         android:textColorHint="@color/white"
         android:textColor="@color/white"
         android:layout_margin="10dp"

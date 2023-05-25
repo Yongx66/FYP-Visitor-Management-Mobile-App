@@ -12,6 +12,7 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 
 public class HttpUtils {
     private static final String TAG = "HttpUtils";
@@ -39,11 +40,21 @@ public class HttpUtils {
         return null;
     }
 
-    public static JSONObject sendHttpPostRequest(String apiUrl, String token) throws IOException, JSONException {
+    public static JSONObject sendHttpPostRequest(String apiUrl, String token, JSONObject requestData) throws IOException, JSONException {
         URL url = new URL(apiUrl);
         HttpURLConnection connection = (HttpURLConnection) url.openConnection();
         connection.setRequestMethod("POST");
         connection.setRequestProperty("Authorization", "Bearer " + token);
+
+        // Check if requestData is not null
+        if (requestData != null) {
+            connection.setDoOutput(true);
+            connection.setRequestProperty("Content-Type", "application/json");
+
+            OutputStream outputStream = connection.getOutputStream();
+            outputStream.write(requestData.toString().getBytes(StandardCharsets.UTF_8));
+            outputStream.close();
+        }
 
         int responseCode = connection.getResponseCode();
         if (responseCode == HttpURLConnection.HTTP_OK) {
@@ -61,4 +72,5 @@ public class HttpUtils {
         }
         return null;
     }
+
 }

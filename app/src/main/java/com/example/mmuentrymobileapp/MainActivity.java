@@ -167,10 +167,7 @@ public class MainActivity extends AppCompatActivity {
                     boolean success = jsonResponse.getBoolean("status");
                     if (success) {
                         String token = jsonResponse.getString("message");
-                        SharedPreferences sharedPreferences = getSharedPreferences("LoginCache", MODE_PRIVATE);
-                        SharedPreferences.Editor editor = sharedPreferences.edit();
-                        editor.putString("token", token);
-                        editor.apply();
+                        LoginCache.saveToken(MainActivity.this, token); // Save the token using LoginCache
                         // Handle successful login
                         Toast.makeText(MainActivity.this, "Login successful", Toast.LENGTH_SHORT).show();
                         Intent intent = new Intent(MainActivity.this, VisitorActivity.class);
@@ -188,6 +185,7 @@ public class MainActivity extends AppCompatActivity {
                 Toast.makeText(MainActivity.this, "Wrong Email or Password", Toast.LENGTH_SHORT).show();
             }
         }
+
 
     }
 }

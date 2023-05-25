@@ -131,7 +131,7 @@ public class SettingFragment extends Fragment {
 
             try {
                 // Make HTTP POST request to the API endpoint
-                JSONObject response = HttpUtils.sendHttpPostRequest(apiUrl, token);
+                JSONObject response = HttpUtils.sendHttpPostRequest(apiUrl, token, null);
 
                 if (response != null && response.getBoolean("status")) {
                     return response.getString("message");

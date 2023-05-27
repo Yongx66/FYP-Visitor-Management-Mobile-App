@@ -17,7 +17,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.mmuentrymobileapp.R;
-import com.example.mmuentrymobileapp.TestActivity;
+import com.example.mmuentrymobileapp.RecordActivity;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -102,7 +102,7 @@ public class ListFragment extends Fragment {
                     int position = holder.getAdapterPosition();
                     if (position == 0) {
                         // clicked apple
-                        context.startActivity(new Intent(context, TestActivity.class));
+                        context.startActivity(new Intent(context, RecordActivity.class));
                     } else {
                         // Handle other item clicks
                     }

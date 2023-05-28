@@ -2,6 +2,7 @@ package com.example.mmuentrymobileapp.fragments;
 
 import android.content.Context;
 import android.content.Intent;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -16,9 +17,16 @@ import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.example.mmuentrymobileapp.HttpUtils;
+import com.example.mmuentrymobileapp.LoginCache;
 import com.example.mmuentrymobileapp.R;
 import com.example.mmuentrymobileapp.RecordActivity;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -31,20 +39,17 @@ public class ListFragment extends Fragment {
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_list, container, false);
 
-        SearchView searchview = view.findViewById(R.id.searchview);
+        SearchView searchView = view.findViewById(R.id.searchview);
         RecyclerView recyclerView = view.findViewById(R.id.recyclerview);
 
-        List<String> list = new ArrayList<>();
-        list.add("Apple");
-        list.add("Orange");
-        list.add("Banana");
-        list.add("Grapes");
+        List<VisitorRecord> list = new ArrayList<>(); // Initialize the list with VisitorRecord objects
 
+        // Create the adapter with the empty list and the current context
         adapter = new RecyclerViewAdapter(list, requireContext());
         recyclerView.setAdapter(adapter);
         recyclerView.setLayoutManager(new LinearLayoutManager(requireContext()));
 
-        searchview.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
             @Override
             public boolean onQueryTextSubmit(String query) {
                 adapter.getFilter().filter(query);
@@ -58,17 +63,94 @@ public class ListFragment extends Fragment {
             }
         });
 
+        // Fetch the visitor records from the API and update the adapter
+        fetchVisitorRecords();
+
         return view;
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        fetchVisitorRecords(); // Fetch the visitor records when the fragment is resumed
+    }
+
+    private void fetchVisitorRecords() {
+        String token = LoginCache.getToken(requireContext());
+        if (token != null) {
+            String apiUrl = "http://10.0.2.2:8000/api/visitor/self/records";
+            new FetchRecordsTask().execute(apiUrl, token);
+        } else {
+            // Handle case when token is null
+            // For example, show a login screen
+        }
+    }
+
+    private class FetchRecordsTask extends AsyncTask<String, Void, JSONObject> {
+
+        @Override
+        protected JSONObject doInBackground(String... params) {
+            String apiUrl = params[0];
+            String token = params[1];
+
+            try {
+                return HttpUtils.sendHttpGetRequest(apiUrl, token);
+            } catch (IOException | JSONException e) {
+                e.printStackTrace();
+            }
+
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(JSONObject response) {
+            if (response != null) {
+                List<VisitorRecord> visitorRecords = parseApiResponse(response);
+                adapter.updateRecords(visitorRecords);
+            }
+        }
+    }
+
+    private List<VisitorRecord> parseApiResponse(JSONObject response) {
+        List<VisitorRecord> records = new ArrayList<>();
+        try {
+            JSONObject messageObject = response.getJSONObject("message");
+            JSONArray activeRecordsArray = messageObject.getJSONArray("self_active_visiting_record");
+            JSONArray incomingRecordsArray = messageObject.getJSONArray("self_incoming_visiting_record");
+            JSONArray pastRecordsArray = messageObject.getJSONArray("self_past_visited_records");
+
+            records.addAll(parseRecords(activeRecordsArray, "Active Visiting Record"));
+            records.addAll(parseRecords(incomingRecordsArray, "Incoming Visiting Record"));
+            records.addAll(parseRecords(pastRecordsArray, "Past Visiting Record"));
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+        return records;
+    }
+
+    private List<VisitorRecord> parseRecords(JSONArray recordsArray, String category) throws JSONException {
+        List<VisitorRecord> records = new ArrayList<>();
+        for (int i = 0; i < recordsArray.length(); i++) {
+            JSONObject recordObject = recordsArray.getJSONObject(i);
+            int id = recordObject.getInt("id");
+            int userId = recordObject.getInt("user_id");
+            String dateOfVisit = recordObject.getString("date_of_visit");
+            String reasonOfVisiting = recordObject.getString("reason_of_visiting");
+
+            VisitorRecord record = new VisitorRecord(id, userId, dateOfVisit, reasonOfVisiting, category);
+            records.add(record);
+        }
+        return records;
     }
 
     public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapter.ViewHolder> implements Filterable {
 
-        private List<String> itemList;
-        private List<String> filteredList;
+        private List<VisitorRecord> itemList;
+        private List<VisitorRecord> filteredList;
         private Context context;
         private ItemFilter itemFilter;
 
-        public RecyclerViewAdapter(List<String> itemList, Context context) {
+        public RecyclerViewAdapter(List<VisitorRecord> itemList, Context context) {
             this.itemList = itemList;
             this.filteredList = new ArrayList<>(itemList);
             this.context = context;
@@ -76,35 +158,41 @@ public class ListFragment extends Fragment {
         }
 
         public class ViewHolder extends RecyclerView.ViewHolder {
-            TextView textView;
+            TextView recordName;
+            TextView recordDate;
+            TextView recordMessage;
 
             public ViewHolder(View itemView) {
                 super(itemView);
-                textView = itemView.findViewById(android.R.id.text1);
+                recordName = itemView.findViewById(R.id.recordName);
+                recordDate = itemView.findViewById(R.id.recordDate);
+                recordMessage = itemView.findViewById(R.id.recordMessage);
             }
         }
 
         @NonNull
         @Override
         public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-            View view = LayoutInflater.from(parent.getContext()).inflate(android.R.layout.simple_list_item_1, parent, false);
+            View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_card, parent, false);
             return new ViewHolder(view);
         }
 
         @Override
         public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
-            String item = filteredList.get(position);
-            holder.textView.setText(item);
+            VisitorRecord record = filteredList.get(position);
+            holder.recordName.setText(record.getCategory());
+            holder.recordDate.setText(record.getDateOfVisit());
+            holder.recordMessage.setText(record.getReasonOfVisiting());
 
             holder.itemView.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
                     int position = holder.getAdapterPosition();
-                    if (position == 0) {
-                        // clicked apple
-                        context.startActivity(new Intent(context, RecordActivity.class));
-                    } else {
-                        // Handle other item clicks
+                    if (position >= 0 && position < filteredList.size()) {
+                        VisitorRecord clickedRecord = filteredList.get(position);
+                        // Pass the clicked record to the RecordActivity
+                        Intent intent = new Intent(context, RecordActivity.class);
+                        context.startActivity(intent);
                     }
                 }
             });
@@ -125,10 +213,10 @@ public class ListFragment extends Fragment {
             protected FilterResults performFiltering(CharSequence constraint) {
                 String query = constraint.toString().toLowerCase();
 
-                List<String> filteredItems = new ArrayList<>();
-                for (String item : itemList) {
-                    if (item.toLowerCase().contains(query)) {
-                        filteredItems.add(item);
+                List<VisitorRecord> filteredItems = new ArrayList<>();
+                for (VisitorRecord record : itemList) {
+                    if (record.getReasonOfVisiting().toLowerCase().contains(query)) {
+                        filteredItems.add(record);
                     }
                 }
 
@@ -140,9 +228,53 @@ public class ListFragment extends Fragment {
 
             @Override
             protected void publishResults(CharSequence constraint, FilterResults results) {
-                filteredList = (List<String>) results.values;
+                filteredList = (List<VisitorRecord>) results.values;
                 notifyDataSetChanged();
             }
+        }
+
+        public void updateRecords(List<VisitorRecord> records) {
+            itemList.clear();
+            itemList.addAll(records);
+            filteredList.clear();
+            filteredList.addAll(records);
+            notifyDataSetChanged();
+        }
+    }
+
+    public static class VisitorRecord {
+        private int id;
+        private int userId;
+        private String dateOfVisit;
+        private String reasonOfVisiting;
+        private String category;
+
+        public VisitorRecord(int id, int userId, String dateOfVisit, String reasonOfVisiting, String category) {
+            this.id = id;
+            this.userId = userId;
+            this.dateOfVisit = dateOfVisit;
+            this.reasonOfVisiting = reasonOfVisiting;
+            this.category = category;
+        }
+
+        public int getId() {
+            return id;
+        }
+
+        public int getUserId() {
+            return userId;
+        }
+
+        public String getDateOfVisit() {
+            return dateOfVisit;
+        }
+
+        public String getReasonOfVisiting() {
+            return reasonOfVisiting;
+        }
+
+        public String getCategory() {
+            return category;
         }
     }
 }

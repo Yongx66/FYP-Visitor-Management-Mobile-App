@@ -82,7 +82,6 @@ public class ListFragment extends Fragment {
             new FetchRecordsTask().execute(apiUrl, token);
         } else {
             // Handle case when token is null
-            // For example, show a login screen
         }
     }
 
@@ -136,8 +135,9 @@ public class ListFragment extends Fragment {
             int userId = recordObject.getInt("user_id");
             String dateOfVisit = recordObject.getString("date_of_visit");
             String reasonOfVisiting = recordObject.getString("reason_of_visiting");
+            String token = recordObject.getString("token"); // Retrieve the token from the JSON response
 
-            VisitorRecord record = new VisitorRecord(id, userId, dateOfVisit, reasonOfVisiting, category);
+            VisitorRecord record = new VisitorRecord(id, userId, dateOfVisit, reasonOfVisiting, category, token);
             records.add(record);
         }
         return records;
@@ -189,14 +189,19 @@ public class ListFragment extends Fragment {
                 public void onClick(View v) {
                     int position = holder.getAdapterPosition();
                     if (position >= 0 && position < filteredList.size()) {
-                        VisitorRecord clickedRecord = filteredList.get(position);
-                        // Pass the clicked record to the RecordActivity
+                        VisitorRecord record = filteredList.get(position);
+                        String token = record.getToken(); // Access the token property directly
+
+                        // Pass the token to the RecordActivity to generate the QR code
                         Intent intent = new Intent(context, RecordActivity.class);
+                        intent.putExtra("token", token);
                         context.startActivity(intent);
                     }
                 }
             });
         }
+
+
 
         @Override
         public int getItemCount() {
@@ -248,13 +253,15 @@ public class ListFragment extends Fragment {
         private String dateOfVisit;
         private String reasonOfVisiting;
         private String category;
+        private String token;
 
-        public VisitorRecord(int id, int userId, String dateOfVisit, String reasonOfVisiting, String category) {
+        public VisitorRecord(int id, int userId, String dateOfVisit, String reasonOfVisiting, String category, String token) {
             this.id = id;
             this.userId = userId;
             this.dateOfVisit = dateOfVisit;
             this.reasonOfVisiting = reasonOfVisiting;
             this.category = category;
+            this.token = token;
         }
 
         public int getId() {
@@ -275,6 +282,10 @@ public class ListFragment extends Fragment {
 
         public String getCategory() {
             return category;
+        }
+
+        public String getToken() {
+            return token;
         }
     }
 }

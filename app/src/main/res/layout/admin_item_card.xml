@@ -3,26 +3,73 @@
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
-    android:layout_height="105dp">
-
+    android:layout_height="180dp">
 
     <TextView
         android:layout_width="200dp"
-        android:id="@+id/visitorName"
+        android:id="@+id/recordTitle"
         android:textSize="16sp"
         android:layout_marginStart="20dp"
-        android:text="Visiting Record"
+        android:text="Record Type"
         android:textColor="@color/black"
         android:layout_marginEnd="20dp"
         android:maxLines="1"
         android:layout_marginTop="15dp"
         android:layout_height="wrap_content"/>
 
+    <TextView
+        android:layout_width="200dp"
+        android:id="@+id/visitorEmail"
+        android:textSize="16sp"
+        android:layout_marginStart="20dp"
+        android:text="Visitor Email"
+        android:layout_below="@+id/recordTitle"
+        android:textColor="@color/black"
+        android:layout_marginEnd="20dp"
+        android:maxLines="1"
+        android:layout_marginTop="5dp"
+        android:layout_height="wrap_content"/>
+
+    <TextView
+        android:layout_width="200dp"
+        android:id="@+id/visitorName"
+        android:textSize="16sp"
+        android:layout_below="@+id/visitorEmail"
+        android:layout_marginStart="20dp"
+        android:text="Visitor Name"
+        android:textColor="@color/black"
+        android:layout_marginEnd="20dp"
+        android:maxLines="1"
+        android:layout_marginTop="5dp"
+        android:layout_height="wrap_content"/>
+
+    <ImageView
+        android:id="@+id/phonePic"
+        android:layout_width="20dp"
+        android:layout_height="20dp"
+        android:layout_below="@+id/visitorName"
+        android:layout_marginStart="20dp"
+        android:layout_marginTop="7dp"
+        app:srcCompat="@drawable/baseline_phone_24_black"/>
+
+    <TextView
+        android:id="@+id/visitorPhone"
+        android:layout_toEndOf="@+id/phonePic"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/visitorName"
+        android:layout_marginTop="5dp"
+        android:layout_marginEnd="20dp"
+        android:layout_marginStart="10dp"
+        android:gravity="center"
+        android:text="0123456789"
+        android:textSize="16sp"/>
+
     <ImageView
         android:id="@+id/recordPic"
         android:layout_width="20dp"
         android:layout_height="20dp"
-        android:layout_below="@+id/visitorName"
+        android:layout_below="@+id/phonePic"
         android:layout_marginStart="20dp"
         android:layout_marginTop="7dp"
         app:srcCompat="@drawable/baseline_access_time_24"/>
@@ -32,7 +79,7 @@
         android:layout_toEndOf="@+id/recordPic"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_below="@+id/visitorName"
+        android:layout_below="@+id/visitorPhone"
         android:layout_marginTop="5dp"
         android:layout_marginEnd="20dp"
         android:layout_marginStart="10dp"

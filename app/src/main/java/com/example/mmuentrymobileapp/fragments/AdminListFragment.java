@@ -25,12 +25,19 @@ import com.example.mmuentrymobileapp.RecordActivity;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.w3c.dom.Text;
 
 import java.io.IOException;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 
-public class ListFragment extends Fragment {
+public class AdminListFragment extends Fragment {
 
     private RecyclerViewAdapter adapter;
 
@@ -78,7 +85,7 @@ public class ListFragment extends Fragment {
     private void fetchVisitorRecords() {
         String token = LoginCache.getToken(requireContext());
         if (token != null) {
-            String apiUrl = "http://10.0.2.2:8000/api/visitor/self/records";
+            String apiUrl = "http://10.0.2.2:8000/api/visitor/all/records";
             new FetchRecordsTask().execute(apiUrl, token);
         } else {
             // Handle case when token is null
@@ -113,14 +120,9 @@ public class ListFragment extends Fragment {
     private List<VisitorRecord> parseApiResponse(JSONObject response) {
         List<VisitorRecord> records = new ArrayList<>();
         try {
-            JSONObject messageObject = response.getJSONObject("message");
-            JSONArray activeRecordsArray = messageObject.getJSONArray("self_active_visiting_record");
-            JSONArray incomingRecordsArray = messageObject.getJSONArray("self_incoming_visiting_record");
-            JSONArray pastRecordsArray = messageObject.getJSONArray("self_past_visited_records");
+            JSONArray messageArray = response.getJSONArray("message");
+            records.addAll(parseRecords(messageArray, "visitor_record"));
 
-            records.addAll(parseRecords(activeRecordsArray, "Active Visiting Record"));
-            records.addAll(parseRecords(incomingRecordsArray, "Incoming Visiting Record"));
-            records.addAll(parseRecords(pastRecordsArray, "Past Visiting Record"));
         } catch (JSONException e) {
             e.printStackTrace();
         }
@@ -128,19 +130,56 @@ public class ListFragment extends Fragment {
     }
 
     private List<VisitorRecord> parseRecords(JSONArray recordsArray, String category) throws JSONException {
-        List<VisitorRecord> records = new ArrayList<>();
+        List<VisitorRecord> activeRecords = new ArrayList<>();
+        List<VisitorRecord> incomingRecords = new ArrayList<>();
+        List<VisitorRecord> pastRecords = new ArrayList<>();
+
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.US);
+        String currentDate = sdf.format(new Date()); // Get the current date
+
         for (int i = 0; i < recordsArray.length(); i++) {
-            JSONObject recordObject = recordsArray.getJSONObject(i);
+            JSONObject recordObject = recordsArray.getJSONObject(i).getJSONObject("visitor_record");
+
             int id = recordObject.getInt("id");
             int userId = recordObject.getInt("user_id");
             String dateOfVisit = recordObject.getString("date_of_visit");
             String reasonOfVisiting = recordObject.getString("reason_of_visiting");
-            String token = recordObject.getString("token"); // Retrieve the token from the JSON response
+            String token = recordObject.getString("token");
 
-            VisitorRecord record = new VisitorRecord(id, userId, dateOfVisit, reasonOfVisiting, category, token);
-            records.add(record);
+            JSONObject userObject = recordObject.getJSONObject("user");
+            String visitorEmail = userObject.getString("email");
+            String visitorName = userObject.getString("full_name");
+            String visitorPhone = userObject.getString("contact_no");
+
+            String recordCategory;
+
+            // Compare the date of visit with the current date
+            if (dateOfVisit.equals(currentDate)) {
+                recordCategory = "Active Visitor Record";
+            } else if (dateOfVisit.compareTo(currentDate) > 0) {
+                recordCategory = "Incoming Visitor Record";
+            } else {
+                recordCategory = "Past Visitor Record";
+            }
+
+            VisitorRecord record = new VisitorRecord(id, userId, dateOfVisit, reasonOfVisiting, recordCategory, token, visitorEmail, visitorName, visitorPhone);
+
+            // Categorize the records based on their date
+            if (recordCategory.equals("Active Visitor Record")) {
+                activeRecords.add(record);
+            } else if (recordCategory.equals("Incoming Visitor Record")) {
+                incomingRecords.add(record);
+            } else {
+                pastRecords.add(record);
+            }
         }
-        return records;
+
+        List<VisitorRecord> mergedRecords = new ArrayList<>();
+        mergedRecords.addAll(activeRecords);
+        mergedRecords.addAll(incomingRecords);
+        mergedRecords.addAll(pastRecords);
+
+        return mergedRecords;
     }
 
     public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapter.ViewHolder> implements Filterable {
@@ -158,13 +197,19 @@ public class ListFragment extends Fragment {
         }
 
         public class ViewHolder extends RecyclerView.ViewHolder {
-            TextView recordName;
+            TextView recordTitle;
+            TextView visitorEmail;
+            TextView visitorName;
+            TextView visitorPhone;
             TextView recordDate;
             TextView recordMessage;
 
             public ViewHolder(View itemView) {
                 super(itemView);
-                recordName = itemView.findViewById(R.id.visitorName);
+                recordTitle = itemView.findViewById(R.id.recordTitle);
+                visitorEmail = itemView.findViewById(R.id.visitorEmail);
+                visitorName = itemView.findViewById(R.id.visitorName);
+                visitorPhone = itemView.findViewById(R.id.visitorPhone);
                 recordDate = itemView.findViewById(R.id.recordDate);
                 recordMessage = itemView.findViewById(R.id.recordMessage);
             }
@@ -173,16 +218,27 @@ public class ListFragment extends Fragment {
         @NonNull
         @Override
         public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-            View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_card, parent, false);
+            View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.admin_item_card, parent, false);
             return new ViewHolder(view);
         }
 
         @Override
         public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
             VisitorRecord record = filteredList.get(position);
-            holder.recordName.setText(record.getCategory());
+            holder.visitorEmail.setText(record.getVisitorEmail());
+            holder.visitorName.setText(record.getVisitorName());
+            holder.visitorPhone.setText(record.getVisitorPhone());
             holder.recordDate.setText(record.getDateOfVisit());
             holder.recordMessage.setText(record.getReasonOfVisiting());
+
+            // Set the record title based on the category
+            if (record.getCategory().equals("Active Visitor Record")) {
+                holder.recordTitle.setText("Active Visitor Record");
+            } else if (record.getCategory().equals("Incoming Visitor Record")) {
+                holder.recordTitle.setText("Incoming Visitor Record");
+            } else {
+                holder.recordTitle.setText("Past Visitor Record");
+            }
 
             holder.itemView.setOnClickListener(new View.OnClickListener() {
                 @Override
@@ -200,7 +256,6 @@ public class ListFragment extends Fragment {
                 }
             });
         }
-
 
 
         @Override
@@ -221,7 +276,10 @@ public class ListFragment extends Fragment {
                 List<VisitorRecord> filteredItems = new ArrayList<>();
                 for (VisitorRecord record : itemList) {
                     if (record.getReasonOfVisiting().toLowerCase().contains(query) ||
-                    record.getDateOfVisit().toLowerCase().contains(query)) {
+                            record.getVisitorEmail().toLowerCase().contains(query) ||
+                            record.getVisitorName().toLowerCase().contains(query) ||
+                            record.getVisitorPhone().toLowerCase().contains(query) ||
+                            record.getDateOfVisit().toLowerCase().contains(query)) {
                         filteredItems.add(record);
                     }
                 }
@@ -239,6 +297,7 @@ public class ListFragment extends Fragment {
             }
         }
 
+
         public void updateRecords(List<VisitorRecord> records) {
             itemList.clear();
             itemList.addAll(records);
@@ -255,14 +314,20 @@ public class ListFragment extends Fragment {
         private String reasonOfVisiting;
         private String category;
         private String token;
+        private String visitorEmail;
+        private String visitorName;
+        private String visitorPhone;
 
-        public VisitorRecord(int id, int userId, String dateOfVisit, String reasonOfVisiting, String category, String token) {
+        public VisitorRecord(int id, int userId, String dateOfVisit, String reasonOfVisiting, String category, String token, String visitorEmail, String visitorName, String visitorPhone) {
             this.id = id;
             this.userId = userId;
             this.dateOfVisit = dateOfVisit;
             this.reasonOfVisiting = reasonOfVisiting;
             this.category = category;
             this.token = token;
+            this.visitorEmail = visitorEmail;
+            this.visitorName = visitorName;
+            this.visitorPhone = visitorPhone;
         }
 
         public int getId() {
@@ -287,6 +352,18 @@ public class ListFragment extends Fragment {
 
         public String getToken() {
             return token;
+        }
+
+        public String getVisitorEmail() {
+            return visitorEmail;
+        }
+
+        public String getVisitorName() {
+            return visitorName;
+        }
+
+        public String getVisitorPhone() {
+            return visitorPhone;
         }
     }
 }

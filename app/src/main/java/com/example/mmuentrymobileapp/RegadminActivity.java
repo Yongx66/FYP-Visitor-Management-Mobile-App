@@ -157,7 +157,7 @@ public class RegadminActivity extends AppCompatActivity {
                     e.printStackTrace();
                 }
             } else {
-                Toast.makeText(RegadminActivity.this, "Failed to connect to the server", Toast.LENGTH_SHORT).show();
+                Toast.makeText(RegadminActivity.this, "The email has been registered", Toast.LENGTH_SHORT).show();
             }
         }
 

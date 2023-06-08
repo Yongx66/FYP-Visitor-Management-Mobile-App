@@ -158,7 +158,7 @@ public class SignupActivity extends AppCompatActivity {
                     e.printStackTrace();
                 }
             } else {
-                Toast.makeText(SignupActivity.this, "Failed to connect to the server", Toast.LENGTH_SHORT).show();
+                Toast.makeText(SignupActivity.this, "The email has been registered", Toast.LENGTH_SHORT).show();
             }
         }
 

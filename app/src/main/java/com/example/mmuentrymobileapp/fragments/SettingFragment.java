@@ -172,6 +172,11 @@ public class SettingFragment extends Fragment {
 
                 // Navigate back to MainActivity
                 startActivity(new Intent(requireContext(), MainActivity.class));
+                // Navigate back to MainActivity and clear activity stack
+                Intent intent = new Intent(requireContext(), MainActivity.class);
+                intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
+                startActivity(intent);
+
             } else {
                 Toast.makeText(requireContext(), "Failed to logout", Toast.LENGTH_SHORT).show();
             }

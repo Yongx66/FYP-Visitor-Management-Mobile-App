@@ -123,7 +123,7 @@ public class HomeFragment extends Fragment {
                 Toast.makeText(requireContext(), "Visitor record created successfully", Toast.LENGTH_SHORT).show();
             } else {
                 // Show an error message if the response is null
-                Toast.makeText(requireContext(), "An error occurred", Toast.LENGTH_SHORT).show();
+                Toast.makeText(requireContext(), "A visitor record of the same date is already exist", Toast.LENGTH_SHORT).show();
             }
         }
     }

@@ -3,5 +3,5 @@ The app is a mobile-based visitor management system that allows visitors to easi
 Snapshot of the app:
 
 
-<img src="https://github.com/user-attachments/assets/14eccdab-9992-4b78-bc25-c5f80893eb60" width="250" height="527"> <img src="https://github.com/user-attachments/assets/32d578fa-5a2b-4d9f-8cc5-fcefc33b8593" width="250" height="527">
+<img src="https://github.com/user-attachments/assets/14eccdab-9992-4b78-bc25-c5f80893eb60" width="250" height="527"> <img src="https://github.com/user-attachments/assets/32d578fa-5a2b-4d9f-8cc5-fcefc33b8593" width="250" height="527"> <img src="https://github.com/user-attachments/assets/32d578fa-5a2b-4d9f-8cc5-fcefc33b8593" width="250" height="527"> <img src="https://github.com/user-attachments/assets/32d578fa-5a2b-4d9f-8cc5-fcefc33b8593" width="250" height="527">
 
